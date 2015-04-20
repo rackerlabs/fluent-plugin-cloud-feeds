@@ -24,6 +24,36 @@ class RackspaceCloudFeedsOutput < Fluent::Output
   Fluent::Plugin.register_output('rackspace_cloud_feeds', self)
 
   config_param :identity_endpoint, :string, :default => nil
-  
+  config_param :identity_username, :string, :default => nil
+  config_param :identity_password, :string, :default => nil
+
+  config_param :feeds_endpoint, :string, :default => nil
+
+
+  def configure(conf)
+    super
+    $log.debug("   Identity endpoint: #{@identity_endpoint}")
+    $log.debug("   Identity username: #{@identity_username}")
+    $log.debug("Cloud Feeds endpoint: #{@feeds_endpoint}")
+  end
+
+  def start
+    super
+    require 'net/http/persistent'
+
+    @feeds_uri = URI @feeds_endpoint
+    @feeds_http = Net::HTTP::Persistent.new 'fluent-feeds-output'
+  end
+
+  def shutdown
+    super
+  end
+
+  def emit(tag, es, chain)
+    chain.next
+    es.each {|time, record|
+      # take the data, put it in to an abdera envelope
+    }
+  end
 
 end
