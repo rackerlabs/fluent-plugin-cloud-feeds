@@ -3,6 +3,7 @@ require 'fluent/plugin/out_rackspace_feeds'
 
 require 'webmock/rspec'
 require 'rexml/document'
+require 'json'
 
 
 WebMock.disable_net_connect!
@@ -32,7 +33,8 @@ EOF
 EOF
   end
 
-  def stub_atom_post(url="http://www.feeds.com/", content = "")
+  def stub_atom_post(content = "")
+    url="http://www.feeds.com/"
     stub_request(:post, url).with do |request|
       assert_proper_atom_payload(request.body, content)
     end
@@ -56,6 +58,20 @@ EOF
     end
   end
 
+  def stub_identity_auth_post(token)
+    stub_request(:post, 'http://www.identity.com/').with do |request|
+      payload = JSON.parse(request.body)
+      payload['auth']['passwordCredentials']['username'] != nil and
+          payload['auth']['passwordCredentials']['password'] != nil and
+          request.headers[:content_type] == 'application/json' and
+          request.headers[:accept] == 'application/json'
+    end.to_return do |request|
+      {:body => <<EOF
+      {"access": {"token": "id": "#{token}"}}
+EOF
+}
+    end
+  end
 
 
   context 'a record from fluentd to cloud feeds' do
@@ -69,13 +85,40 @@ EOF
       driver.configure("feeds_endpoint http://www.feeds.com/")
       driver.run
 
-      stub_atom_post('http://www.feeds.com/', simple_sample_payload)
+      stub_atom_post(simple_sample_payload)
 
       driver.emit(simple_sample_payload)
 
       assert_requested(:post, "http://www.feeds.com/")
     end
-    it "authenticates with identity to use the token in the header"
+
+    it "authenticates with identity to use the token in the header" do
+      driver.configure(<<EOF
+identity_endpoint http://www.identity.com/
+identity_username fakeuser
+identity_password best_password
+feeds_endpoint http://www.feeds.com/
+EOF
+      )
+      driver.run
+
+      token = SecureRandom.uuid.to_s
+
+      stub_identity_auth_post(token)
+
+      stub_atom_post(simple_sample_payload)
+
+      expect(a_request(:post, 'http://www.identity.com/').with do |req|
+               parsed = JSON.parse(req.body)
+               parsed['auth']['passwordCredentials']['username'] == 'fakeuser' and
+                   parsed['auth']['passwordCredentials']['password'] == 'best_password'
+             end).to have_been_made.once
+      
+      expect(a_request(:post, 'http://www.feeds.com/').with do |req|
+               req.headers[:x_auth_token] == token
+             end).to have_been_made.once
+    end
+
     it "will fail the post if the response is 4xx clearing the auth token"
     it "retries authentication if no auth token is set"
   end
