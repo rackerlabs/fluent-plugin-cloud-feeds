@@ -2,6 +2,7 @@ require 'fluent/test'
 require 'fluent/plugin/out_rackspace_feeds'
 
 require 'webmock/rspec'
+require 'rexml/document'
 
 
 WebMock.disable_net_connect!
@@ -11,6 +12,8 @@ RSpec.describe('Rackspace Cloud Feeds output plugin') do
   before :example do
     Fluent::Test.setup
     @driver = nil
+
+    $log.out.logs
   end
 
   def driver(tag='test', conf='')
@@ -29,20 +32,49 @@ EOF
 EOF
   end
 
-  def stub_feeds(url="http://www.feeds.com")
-    stub_request(:post, url).with do |req|
-      puts "request is:"
-      puts req
+  def stub_atom_post(url="http://www.feeds.com/", content = "")
+    stub_request(:post, url).with do |request|
+      assert_proper_atom_payload(request.body, content)
     end
   end
 
+  def assert_proper_atom_payload(payload, content)
+    doc = REXML::Document.new(payload)
+
+    expect(REXML::XPath.first(doc, "/entry/id")).not_to be_nil
+    title = REXML::XPath.first(doc, "/entry/title").text
+    expect(title).to eq("User Access Event")
+
+    expect(REXML::XPath.first(doc, "/entry/author/name").text).to eq("Repose")
+    expect(REXML::XPath.first(doc, "/entry/updated").text).to match(/\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d\dZ/)
+    expect(REXML::XPath.first(doc, "/entry/content").text).to eq(content)
+  end
+
+
+
+
   context 'a record from fluentd to cloud feeds' do
+
+    it "should register as rackspace_cloud_feeds" do
+      driver.configure("feeds_endpoint http://www.feeds.com/")
+
+      puts $log.out.logs
+
+      expect($log.out.logs).to include(/.*registered output plugin 'rackspace_cloud_feeds'.*/)
+    end
+
     it "outputs a record to cloud feeds as an atom post" do
-      driver.configure("feeds_endpoint http://www.feeds.com")
+      driver.configure("feeds_endpoint http://www.feeds.com/")
+      driver.run
+
+      stub_atom_post('http://www.feeds.com/', simple_sample_payload)
 
       driver.emit(simple_sample_payload)
-      driver.run
-      assert_requested(stub_feeds)
+
+      $log.out.logs.each do |l|
+        puts l
+      end
+      assert_requested(:post, "http://www.feeds.com/")
     end
     it "authenticates with identity to use the token in the header"
     it "will fail the post if the response is 4xx clearing the auth token"
