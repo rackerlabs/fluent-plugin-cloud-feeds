@@ -195,7 +195,9 @@ EOF
       }.to raise_exception(/Unable to authenticate with identity at.+/)
 
       expect(WebMock).not_to have_requested(:post, FEED_URL)
-
     end
+
+    it "should publish the event using the time given when it entered fluentd"
+    # TODO: emit with a time, and ensure that time is received by us
   end
 end
