@@ -50,6 +50,11 @@ EOF
     expect(REXML::XPath.first(doc, "/entry/content").text).to eq(content)
   end
 
+  def print_logs
+    $log.out.logs.each do |l|
+      puts l
+    end
+  end
 
 
 
@@ -57,9 +62,6 @@ EOF
 
     it "should register as rackspace_cloud_feeds" do
       driver.configure("feeds_endpoint http://www.feeds.com/")
-
-      puts $log.out.logs
-
       expect($log.out.logs).to include(/.*registered output plugin 'rackspace_cloud_feeds'.*/)
     end
 
@@ -71,9 +73,6 @@ EOF
 
       driver.emit(simple_sample_payload)
 
-      $log.out.logs.each do |l|
-        puts l
-      end
       assert_requested(:post, "http://www.feeds.com/")
     end
     it "authenticates with identity to use the token in the header"
