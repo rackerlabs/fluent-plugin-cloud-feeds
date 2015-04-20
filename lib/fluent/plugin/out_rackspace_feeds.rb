@@ -20,7 +20,7 @@ Unless required by applicable law or agreed to in writing,
   under the License.
 =end
 
-class RackspaceCloudFeedsOutput < Fluent::Output
+class Fluent::RackspaceCloudFeedsOutput < Fluent::Output
   Fluent::Plugin.register_output('rackspace_cloud_feeds', self)
 
   config_param :identity_endpoint, :string, :default => nil

@@ -24,4 +24,5 @@ Gem::Specification.new do |s|
   # for help from RubyMine!
   s.add_runtime_dependency('fluentd', '0.12.7')
   s.add_development_dependency('rspec', '3.2.0')
+  s.add_development_dependency('webmock', '1.21.0')
 end
