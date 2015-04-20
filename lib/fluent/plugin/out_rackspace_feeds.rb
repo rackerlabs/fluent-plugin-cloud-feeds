@@ -12,7 +12,7 @@
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing,
+  Unless required by applicable law or agreed to in writing,
   software distributed under the License is distributed on an
   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
   KIND, either express or implied.  See the License for the
@@ -55,6 +55,38 @@ class Fluent::RackspaceCloudFeedsOutput < Fluent::Output
   end
 
   ##
+  # either get a token back from identity, or poop the pants
+  # noinspection RubyStringKeysInHashInspection
+  def authenticate_user
+    uri = URI @identity_endpoint
+    http = Net::HTTP.new(uri.host, uri.port)
+    if uri.scheme == 'https'
+      http.use_ssl = true
+    end
+    req = Net::HTTP::Post.new(uri.path)
+    content = {
+        'auth' => {
+            'passwordCredentials' => {
+                'username' => @identity_username,
+                'password' => @identity_password
+            }
+        }
+    }
+    req.body = content.to_json
+    req['content-type'] = 'application/json'
+    req['accept'] = 'application/json'
+    res = http.request(req)
+
+    case res
+      when Net::HTTPSuccess
+        # Get the token
+        JSON.parse(res.body)['access']['token']['id']
+      else
+        raise "Unable to authenticate with identity at #{@identity_endpoint} as #{@identity_username}"
+    end
+  end
+
+  ##
   # putting content into an atom entry document
   def atomic_wrapper(content)
     # date format
@@ -77,8 +109,18 @@ EOF
       # take the data, put it in to an abdera envelope
       post = Net::HTTP::Post.new @feeds_uri.path
       post.body = atomic_wrapper(record)
+      unless @auth_token
+        #get new auth token
+        @auth_token = authenticate_user
+      end
+      post['x-auth-token'] = @auth_token
+
       begin
         response = @feeds_http.request @feeds_uri, post
+        if response.code !~ /2\d\d/
+          @auth_token = nil
+          raise "NOT AUTHORIZED TO POST TO FEED ENDPOINT #{@feeds_endpoint}"
+        end
         $log.debug "FEEDS RESPONSE CODE #{response.code}"
         $log.error "FEEDS RESPONSE BODY: #{response.body}" if response.code !~ /2\d\d/
       end
