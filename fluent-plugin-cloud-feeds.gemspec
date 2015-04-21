@@ -2,7 +2,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |s|
   s.name = "fluent-plugin-cloud-feeds"
-  s.version = "1.0.0"
+  s.version = "1.0.1"
   s.authors = ["David Kowis", "Tyler Royal"]
   s.email= ["david.kowis@rackspace.com", "tyler.royal@rackspace.com"]
   s.homepage = "https://github.com/rackerlabs/fluentd-feeds-output"
