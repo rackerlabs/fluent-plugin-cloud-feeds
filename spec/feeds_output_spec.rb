@@ -224,7 +224,6 @@ EOF
                doc = REXML::Document.new(req.body)
 
                updated = REXML::XPath.first(doc, "/entry/updated").text
-               puts("UPDATED: #{updated}")
                expected_time = DateTime.strptime(current_time.to_i.to_s, '%s').strftime("%FT%T.%LZ")
                updated == expected_time
              end).to have_been_made.once
