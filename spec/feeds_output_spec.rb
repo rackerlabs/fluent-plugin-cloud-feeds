@@ -197,7 +197,38 @@ EOF
       expect(WebMock).not_to have_requested(:post, FEED_URL)
     end
 
-    it "should publish the event using the time given when it entered fluentd"
-    # TODO: emit with a time, and ensure that time is received by us
+    it "should publish the event using the time given when it entered fluentd" do
+      driver.configure(<<EOF
+identity_endpoint #{IDENTITY_URL}
+identity_username fakeuser
+identity_password best_password
+feeds_endpoint #{FEED_URL}
+EOF
+      )
+      driver.run
+
+      token = "loltoken"
+      #stub an identity
+      stub_identity_auth_post(token)
+
+      # just a basic stub for the post to feeds
+      stub_request(:post, FEED_URL)
+
+
+      current_time = Time.now - 10000
+
+
+      driver.emit(simple_sample_payload, current_time)
+
+      expect(a_request(:post, FEED_URL).with do |req|
+               doc = REXML::Document.new(req.body)
+
+               updated = REXML::XPath.first(doc, "/entry/updated").text
+               puts("UPDATED: #{updated}")
+               expected_time = DateTime.strptime(current_time.to_i.to_s, '%s').strftime("%FT%T.%LZ")
+               updated == expected_time
+             end).to have_been_made.once
+
+    end
   end
 end

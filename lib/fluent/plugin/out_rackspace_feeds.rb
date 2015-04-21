@@ -88,9 +88,9 @@ class Fluent::RackspaceCloudFeedsOutput < Fluent::Output
 
   ##
   # putting content into an atom entry document
-  def atomic_wrapper(content)
+  def atomic_wrapper(content, time)
     # date format
-    now = DateTime.now.new_offset(0).strftime("%FT%T.%LZ")
+    now = DateTime.strptime(time.to_s, '%s').strftime("%FT%T.%LZ")
 
     <<EOF
 <entry xmlns="http://www.w3.org/2005/Atom">
@@ -108,7 +108,7 @@ EOF
     es.each { |time, record|
       # take the data, put it in to an abdera envelope
       post = Net::HTTP::Post.new @feeds_uri.path
-      post.body = atomic_wrapper(record)
+      post.body = atomic_wrapper(record, time)
       unless @auth_token
         #get new auth token
         @auth_token = authenticate_user
