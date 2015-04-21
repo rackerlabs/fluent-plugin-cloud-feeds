@@ -93,6 +93,7 @@ class Fluent::RackspaceCloudFeedsOutput < Fluent::Output
     now = DateTime.strptime(time.to_s, '%s').strftime("%FT%T.%LZ")
 
     <<EOF
+<?xml version="1.0" encoding="UTF-8" ?>
 <entry xmlns="http://www.w3.org/2005/Atom">
     <id>#{SecureRandom.uuid.to_s}</id>
     <title type="text">User Access Event</title>
@@ -108,7 +109,8 @@ EOF
     es.each { |time, record|
       # take the data, put it in to an abdera envelope
       post = Net::HTTP::Post.new @feeds_uri.path
-      post.body = atomic_wrapper(record, time)
+
+      post.body = atomic_wrapper(JSON.parse(record)['message'], time)
       unless @auth_token
         #get new auth token
         @auth_token = authenticate_user

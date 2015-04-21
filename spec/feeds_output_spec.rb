@@ -33,6 +33,10 @@ RSpec.describe('Rackspace Cloud Feeds output plugin') do
 EOF
   end
 
+  def encoded_payload
+    {'message' => simple_sample_payload}.to_json
+  end
+
   def less_simple_payload
     <<EOF
 { "GUID" : "9b2ac70c-16c9-493e-85be-d26a39319c2b", "ServiceCode" : "repose", "Region" : "USA", "DataCenter" : "DFW", "Timestamp" : "1429546468047", "Request" : { "Method" : "GET", "URL" : "http://localhost:10006/", "QueryString" : "", "Parameters" : {  }, "UserName" : "", "ImpersonatorName" : "", "ProjectID" : [  ], "Roles" : [  ], "UserAgent" : "deproxy 0.21" }, "Response" : { "Code" : 200, "Message" : "OK" }, "MethodLabel" : "" }
@@ -100,7 +104,7 @@ EOF
       stub_identity_auth_post(token)
       stub_atom_post(simple_sample_payload)
 
-      driver.emit(simple_sample_payload)
+      driver.emit(encoded_payload)
 
       expect(a_request(:post, IDENTITY_URL).with do |req|
                parsed = JSON.parse(req.body)
@@ -127,7 +131,7 @@ EOF
       stub_identity_auth_post(token)
 
       stub_atom_post(simple_sample_payload)
-      driver.emit(simple_sample_payload)
+      driver.emit(encoded_payload)
 
 
       expect(a_request(:post, FEED_URL).with do |req|
@@ -146,7 +150,7 @@ EOF
 
       # simulate behavior from the bufferize plugin, which will retry the call eventually
       expect {
-        driver.emit(simple_sample_payload)
+        driver.emit(encoded_payload)
       }.to raise_exception(/NOT AUTHORIZED TO POST TO FEED ENDPOINT.+/)
 
       #expect another request to identity
@@ -154,7 +158,7 @@ EOF
       stub_atom_post(simple_sample_payload)
 
       #simulate the thing being called again
-      driver.emit(simple_sample_payload)
+      driver.emit(encoded_payload)
 
       expect(a_request(:post, IDENTITY_URL).with do |req|
                parsed = JSON.parse(req.body)
@@ -191,7 +195,7 @@ EOF
       end
 
       expect {
-        driver.emit(simple_sample_payload)
+        driver.emit(encoded_payload)
       }.to raise_exception(/Unable to authenticate with identity at.+/)
 
       expect(WebMock).not_to have_requested(:post, FEED_URL)
