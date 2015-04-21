@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 require 'fluent/test'
-require 'fluent/plugin/out_rackspace_feeds'
+require 'fluent/plugin/out_rackspace_cloud_feeds'
 
 
 require 'webmock/rspec'
