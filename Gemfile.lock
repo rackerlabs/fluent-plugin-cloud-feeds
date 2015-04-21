@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fluent-plugin-cloud-feeds (1.0.2)
+    fluent-plugin-cloud-feeds (1.1.0)
       fluentd (= 0.12.7)
       net-http-persistent (>= 2.7)
 
