@@ -110,7 +110,7 @@ EOF
       # take the data, put it in to an abdera envelope
       post = Net::HTTP::Post.new @feeds_uri.path
 
-      post.body = atomic_wrapper(JSON.parse(record)['message'].to_json, time)
+      post.body = atomic_wrapper(record['message'], time)
       unless @auth_token
         #get new auth token
         @auth_token = authenticate_user
