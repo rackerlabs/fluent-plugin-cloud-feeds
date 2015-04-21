@@ -28,9 +28,10 @@ RSpec.describe('Rackspace Cloud Feeds output plugin') do
   end
 
   def simple_sample_payload
-    <<EOF
+    JSON.parse(<<EOF
 { "GUID" : "87669264-3fc2-4e6e-b225-2f79f17d14c9", "ServiceCode" : "", "Region" : "", "DataCenter" : "", "Cluster" : "cluster", "Node" : "node", "RequestorIp" : "127.0.0.1", "Timestamp" : "1429546010984", "CadfTimestamp" : "2015-04-20T11:06:50.984-05:00", "Request" : { "Method" : "GET", "MethodLabel" : "", "CadfMethod" : "read/get", "URL" : "", "TargetHost" : "", "QueryString" : "", "Parameters" : {  }, "UserName" : "", "ImpersonatorName" : "", "DefaultProjectID" : "", "ProjectID" : [  ], "Roles" : [  ], "UserAgent" : "" }, "Response" : { "Code" : 200, "CadfOutcome" : "success", "Message" : "OK" } }
 EOF
+    )
   end
 
   def encoded_payload
@@ -58,7 +59,7 @@ EOF
 
     expect(REXML::XPath.first(doc, "/entry/author/name").text).to eq("Repose")
     expect(REXML::XPath.first(doc, "/entry/updated").text).to match(/\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d\dZ/)
-    expect(REXML::XPath.first(doc, "/entry/content").text).to eq(content)
+    expect(REXML::XPath.first(doc, "/entry/content").text).to eq(content.to_json)
   end
 
   def print_logs
@@ -222,7 +223,7 @@ EOF
       current_time = Time.now - 10000
 
 
-      driver.emit(simple_sample_payload, current_time)
+      driver.emit(encoded_payload, current_time)
 
       expect(a_request(:post, FEED_URL).with do |req|
                doc = REXML::Document.new(req.body)
