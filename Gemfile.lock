@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fluentd-feeds-output (1.0.0)
+    fluent-plugin-cloud-feeds (1.0.0)
       fluentd (= 0.12.7)
       net-http-persistent (>= 2.7)
 
@@ -63,7 +63,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  fluentd-feeds-output!
+  fluent-plugin-cloud-feeds!
   rspec (= 3.2.0)
   simplecov (= 0.10.0)
   webmock (= 1.21.0)
