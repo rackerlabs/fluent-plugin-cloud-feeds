@@ -99,7 +99,7 @@ class Fluent::RackspaceCloudFeedsOutput < Fluent::Output
     <title type="text">User Access Event</title>
     <author><name>Repose</name></author>
     <updated>#{now}</updated>
-    <content type="text">#{content}</content>
+    <content type="application/xml">#{content}</content>
 </entry>
 EOF
   end

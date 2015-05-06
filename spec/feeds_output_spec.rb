@@ -59,6 +59,7 @@ EOF
     expect(REXML::XPath.first(doc, "/entry/author/name").text).to eq("Repose")
     expect(REXML::XPath.first(doc, "/entry/updated").text).to match(/\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d.\d\d\dZ/)
     expect(REXML::XPath.first(doc, "/entry/content").text).to eq(content)
+    expect(REXML::XPath.first(doc, "/entry/content/@type").value).to eq("application/xml")
   end
 
   def print_logs
