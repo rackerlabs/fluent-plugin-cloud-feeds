@@ -107,6 +107,11 @@ EOF
 
   def emit(tag, es, chain)
     es.each { |time, record|
+      http = Net::HTTP.new(@feeds_uri.host, @feeds_uri.port)
+      if @feeds_uri.scheme == 'https'
+        http.use_ssl = true
+      end
+
       # take the data, put it in to an abdera envelope
       post = Net::HTTP::Post.new @feeds_uri.path
 
@@ -118,7 +123,8 @@ EOF
       post['x-auth-token'] = @auth_token
 
       begin
-        response = @feeds_http.request @feeds_uri, post
+        response = http.request(post)
+
         if response.code !~ /2\d\d/
           @auth_token = nil
           raise "NOT AUTHORIZED TO POST TO FEED ENDPOINT #{@feeds_endpoint}"
