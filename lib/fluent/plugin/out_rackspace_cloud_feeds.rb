@@ -121,6 +121,7 @@ EOF
         @auth_token = authenticate_user
       end
       post['x-auth-token'] = @auth_token
+      post['content-type'] = 'application/atom+xml'
 
       begin
         response = http.request(post)
