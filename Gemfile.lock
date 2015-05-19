@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    fluent-plugin-cloud-feeds (1.3.1)
+    fluent-plugin-cloud-feeds (1.3.2)
       fluentd (= 0.12.7)
       net-http-persistent (>= 2.7)
 
@@ -52,7 +52,7 @@ GEM
     thread_safe (0.3.5)
     tzinfo (1.2.2)
       thread_safe (~> 0.1)
-    tzinfo-data (1.2015.3)
+    tzinfo-data (1.2015.4)
       tzinfo (>= 1.0.0)
     webmock (1.21.0)
       addressable (>= 2.3.6)
